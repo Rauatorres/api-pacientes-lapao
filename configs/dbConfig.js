@@ -10,9 +10,5 @@ const pool = mysql.createPool({
     database: process.env.DATABASE
 });
 
-// pool.query('SELECT * FROM paciente WHERE id=5', function (error, results, fields) {
-//     if (error) throw error;
-//     console.log(results[0]);
-// });
 
 module.exports = pool;

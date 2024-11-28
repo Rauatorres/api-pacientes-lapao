@@ -5,37 +5,86 @@ const DAO = class DAO{
         this.tabela = tabela;
     }
 
-    #executarQuery(query){
+    _executarQuery(query, callbackErro, callbackSucesso){
         this.pool.getConnection((err, con)=>{
-            if (err) throw err;
-            con.query(query, (error, resultados, fields)=>{
-                // callback(resultados[0]);
-                con.release();
-                if (error) throw error;
-            });
-        });
-    }
-    #executarSelectQuery(query, callback){
-        this.pool.getConnection((err, con)=>{
-            if (err) throw err;
-            con.query(query, (error, resultados, fields)=>{
-                callback(resultados[0]);
-                con.release();
-                if (error) throw error;
-            });
+            if (err){
+                callbackErro(err);
+            }else{
+                con.query(query, (erroQuery, resultados, fields)=>{
+                    con.release();
+                    if (erroQuery){
+                        callbackErro(erroQuery);
+                    }else{
+                        callbackSucesso();
+                    }
+                });
+            }
         });
     }
 
-    selectOne(atributo, valor, callback) {
-        const query = `SELECT * FROM ${this.tabela} WHERE ${atributo}=${valor}`;
-        this.pool.getConnection((err, con)=>{
-            if (err) throw err;
-            con.query(query, (error, resultados, fields)=>{
-                callback(resultados[0]);
-                con.release();
-                if (error) throw error;
+    selectOne(requisitos) {
+        let { chave, valor } = requisitos;
+        if(typeof(valor) == 'string'){
+            valor = `'${valor}'`;
+        }
+
+        const query = `SELECT * FROM ${this.tabela} WHERE ${chave}=${valor}`;
+
+        let executarQuery = new Promise((resolve, reject)=>{
+            this.pool.getConnection((err, con)=>{
+                if (err){
+                    reject(err);
+                }else{
+                    con.query(query, (error, resultados, fields)=>{
+                        if (error){
+                            reject(error);
+                        }else{
+                            resolve(resultados[0]);
+                        }
+                        con.release();
+                    });
+                }
             });
-        });
+
+        })
+
+        return executarQuery.then(
+            (resultado) => {return resultado;},
+            (erro) => {return erro;}
+        )
+
+    }
+
+    selectMany(requisitos) {
+        let { chave, valor } = requisitos;
+        if(typeof(valor) == 'string'){
+            valor = `'${valor}'`;
+        }
+
+        const query = `SELECT * FROM ${this.tabela} WHERE ${chave}=${valor}`;
+
+        let executarQuery = new Promise((resolve, reject)=>{
+            this.pool.getConnection((err, con)=>{
+                if (err){
+                    reject(err);
+                }else{
+                    con.query(query, (error, resultados, fields)=>{
+                        if (error){
+                            reject(error);
+                        }else{
+                            resolve(resultados);
+                        }
+                        con.release();
+                    });
+                }
+            });
+
+        })
+
+        return executarQuery.then(
+            (resultado) => {return resultado;},
+            (erro) => {return erro;}
+        )
 
     }
 
@@ -51,24 +100,7 @@ const DAO = class DAO{
         });
     }
 
-    insertOne(insert){
-        let atributos = '';
-        let values = '';
-
-        for(const [key, value] of Object.entries(insert)){
-            atributos += `, ${key}`;
-            if((typeof value) == 'string'){
-                values += `, '${value}'`;
-            }else{
-                values += `, ${value}`;
-            }
-        }
-
-        let query = `INSERT INTO ${this.tabela} (id ${atributos}) VALUES(DEFAULT ${values})`;
-        console.log(query);
-
-        this.#executarQuery(query);
-    }
+    
 }
 
 module.exports = DAO;
