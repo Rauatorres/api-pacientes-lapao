@@ -1,9 +1,9 @@
 const DAO = require('./DAO');
 
-const UsuarioDAO = class UsuarioDAO extends DAO{
+const ConsultasDAO = class ConsultasDAO extends DAO{
     constructor(){
         super('agenda_consulta');
     }
 };
 
-module.exports = UsuarioDAO;
+module.exports = ConsultasDAO;

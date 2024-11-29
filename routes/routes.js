@@ -1,5 +1,6 @@
 const UsuarioDAO = require('../model/UsuarioDAO');
 const ConsultasDAO = require('../model/ConsultasDAO');
+const { constants } = require('crypto');
 
 module.exports = (app)=>{
     app.get('/', (req, res)=>{
@@ -9,10 +10,13 @@ module.exports = (app)=>{
     app.post('/login', async (req, res)=>{
         const { username, senha } = req.body;
         const usuarioDAO = new UsuarioDAO();
+        const crypto = require('crypto');
+
+        const senhaHash = crypto.createHash('sha256').update(senha).digest('hex');
         
         let dadosUsuario = await usuarioDAO.selectOne({chave: 'username', valor: username});
         
-        if (senha == dadosUsuario.senha){
+        if (senhaHash == dadosUsuario.senha){
             res.json({success: true, data: dadosUsuario});
         }else{
             res.json({success: false, msg: 'senha incorreta'});
@@ -21,17 +25,21 @@ module.exports = (app)=>{
     });
 
     app.post('/cadastrar', (req, res)=>{
+        const crypto = require('crypto');
 
         const usuario = new UsuarioDAO();
 
         const { username, senha, tipo, id_pessoa } = req.body;
+        const senhaHash = crypto.createHash('sha256').update(senha).digest('hex');
 
 
         usuario.insertOne(
-            {username: username, senha: senha, tipo: tipo, id_pessoa: id_pessoa}, 
+            {username: username, senha: senhaHash, tipo: tipo, id_pessoa: id_pessoa}, 
             (erro) => res.json({success: false, msg: erro.sqlMessage}), 
             () => res.json({success: true})
         );
+
+        // res.json({senha: senhaHash});
 
     });
  
