@@ -16,11 +16,22 @@ module.exports = (app)=>{
         
         let dadosUsuario = await usuarioDAO.selectOne({chave: 'username', valor: username});
         
-        if (senhaHash == dadosUsuario.senha){
-            res.json({success: true, data: dadosUsuario});
+        if(dadosUsuario){
+            if (senhaHash == dadosUsuario.senha){
+                const { id, username, id_pessoa, tipo} = dadosUsuario
+                res.json({success: true, data: {
+                    id: id,
+                    username: username,
+                    id_pessoa: id_pessoa,
+                    tipo: tipo
+                }});
+            }else{
+                res.json({success: false, msg: 'senha incorreta'});
+            }
         }else{
-            res.json({success: false, msg: 'senha incorreta'});
+            res.json({success: false, msg: 'nome de usuário não encontrado'});
         }
+        
         
     });
 
@@ -38,9 +49,6 @@ module.exports = (app)=>{
             (erro) => res.json({success: false, msg: erro.sqlMessage}), 
             () => res.json({success: true})
         );
-
-        // res.json({senha: senhaHash});
-
     });
  
     app.post('/consultas', async (req, res)=>{
