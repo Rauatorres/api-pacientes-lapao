@@ -1,5 +1,7 @@
 const UsuarioDAO = require('../model/UsuarioDAO');
 const ConsultasDAO = require('../model/ConsultasDAO');
+const PacientesDAO = require('../model/PacientesDAO');
+const MedicosDAO = require('../model/MedicosDAO');
 const { constants } = require('crypto');
 
 module.exports = (app)=>{
@@ -52,7 +54,9 @@ module.exports = (app)=>{
     });
  
     app.post('/consultas', async (req, res)=>{
-        const { id_usuario, tipo } = req.body;
+        const { id_pessoa, tipo } = req.body;
+
+        // console.log(req.body);
 
         const PACIENTE = 0;
         const MEDICO = 1;
@@ -62,12 +66,42 @@ module.exports = (app)=>{
         let resultadoConsultas = [];
 
         if(tipo == PACIENTE){
-            resultadoConsultas = await consultasDAO.selectMany({chave: 'idpaciente', valor: id_usuario});
+            resultadoConsultas = await consultasDAO.selectMany({chave: 'idpaciente', valor: id_pessoa});
         }else if(tipo == MEDICO){
-            resultadoConsultas = await consultasDAO.selectMany({chave: 'idmedico', valor: id_usuario});
+            resultadoConsultas = await consultasDAO.selectMany({chave: 'idmedico', valor: id_pessoa});
         }
 
         res.json({consultas: resultadoConsultas});
+    });
+
+    app.post('/medico/nome', async (req, res)=>{
+        const { id } = req.body;
+        const medicoDAO = new MedicosDAO();
+
+        const medico = await medicoDAO.selectOne({chave: 'id', valor: id});
+
+        // console.log(medico == undefined);
+        if(medico != undefined){
+            res.json({nome: medico.nome});
+        }else{
+            res.json({nome: "(vazio)"});
+        }
+
+    });
+
+    app.post('/paciente/nome', async (req, res)=>{
+        const { id } = req.body;
+        const pacienteDAO = new PacientesDAO();
+
+        const paciente = await pacienteDAO.selectOne({chave: 'id', valor: id});
+
+        // console.log(medico == undefined);
+        if(paciente != undefined){
+            res.json({nome: paciente.nome});
+        }else{
+            res.json({nome: "(vazio)"});
+        }
+
     });
 
 };
