@@ -1,7 +1,7 @@
 const DAO = class DAO{
     
     constructor(tabela){
-        this.pool = require('../configs/dbConfig');
+        this.pool = require('../../configs/dbConfig');
         this.tabela = tabela;
     }
 
@@ -23,12 +23,23 @@ const DAO = class DAO{
     }
 
     selectOne(requisitos) {
-        let { chave, valor } = requisitos;
-        if(typeof(valor) == 'string'){
-            valor = `'${valor}'`;
+        let requisitosQuery = '';
+
+        for(const [chave, valor] of Object.entries(requisitos)){
+            let valorQuery;
+            if(typeof(valor) == 'string'){
+                valorQuery = `'${valor}'`;
+            }else{
+                valorQuery = valor;
+            }
+            if((Object.keys(requisitos))[0] == chave){
+                requisitosQuery += `${chave}=${valorQuery} `;
+            }else{
+                requisitosQuery += `AND ${chave}=${valorQuery} `;
+            }
         }
 
-        const query = `SELECT * FROM ${this.tabela} WHERE ${chave}=${valor}`;
+        const query = `SELECT * FROM ${this.tabela} WHERE ${requisitosQuery}`;
 
         let executarQuery = new Promise((resolve, reject)=>{
             this.pool.getConnection((err, con)=>{
@@ -39,7 +50,11 @@ const DAO = class DAO{
                         if (error){
                             reject(error);
                         }else{
-                            resolve(resultados[0]);
+                            if(resultados.length > 0){
+                                resolve({ ...resultados[0], encontrou: true });
+                            }else{
+                                resolve({ encontrou: false })
+                            }
                         }
                         con.release();
                     });
