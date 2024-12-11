@@ -1,12 +1,14 @@
-const Usuario = require('../model/login/Usuario');
+const Usuario = require('./login/Usuario');
 
 module.exports.logar = async (app, req, res)=>{
     const { username, senha } = req.body;
     
-    const usuario = new Usuario(username, senha);
-    const usuarioDados = await usuario.getDados();
+    const usuario = new Usuario();
+    const usuarioDados = await usuario.fazerLogin(username, senha);
+    const consultas = await usuario.getConsultas();
+
     
-    res.json(usuarioDados);
+    res.json({dadosLogin: usuarioDados, consultas: consultas});
 }
 
 module.exports.cadastrar = async (app, req, res)=>{
