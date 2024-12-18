@@ -16,6 +16,7 @@ const Usuario = class Usuario{
         let dadosUsuario = await this._usuariosDAO.selectOne({username: username});
         let resultado = {};
         
+        
         if(dadosUsuario){
             if (senhaHash == dadosUsuario.senha){
                 this._logado = true;
@@ -33,27 +34,20 @@ const Usuario = class Usuario{
     async _getDados(username){
         let dadosUsuario = await this._usuariosDAO.selectOne({username: username});
         
-        if(dadosUsuario){
+        if(dadosUsuario.encontrou){
             return {success: true, ...dadosUsuario};
         }else{
             return {success: false, msg: 'usuário não encontrado'};
         }
     }
-
+    
     async cadastrar(dados){
-        let usuarioDados = await this._getDados(dados.username);
-        if(!usuarioDados.success){
-            const crypto = require('crypto');
-            const senhaHash = crypto.createHash('sha256').update(dados.senha).digest('hex');
-            
-            return this._usuariosDAO.insertOne(
-                {username: dados.username, senha: senhaHash, tipo: dados.tipo, id_pessoa: dados.id_pessoa}, 
-                (erro) => ({success: false, msg: erro.sqlMessage}), 
-                () => ({success: true})
-            );
-        }else{
-            return {success: false, msg: 'O usuário já existe!'};
-        }
+        const crypto = require('crypto');
+        const senhaHash = crypto.createHash('sha256').update(dados.senha).digest('hex');
+        
+        return await this._usuariosDAO.insertOne(
+            {username: dados.username, senha: senhaHash, tipo: dados.tipo, id_pessoa: dados.id_pessoa}
+        );
     }
 
     async getConsultas(){
@@ -68,9 +62,9 @@ const Usuario = class Usuario{
         let resultadoConsultas = [];
 
         if(tipo == PACIENTE){
-            resultadoConsultas = await consultasDAO.selectMany({chave: 'idpaciente', valor: id_pessoa});
+            resultadoConsultas = await consultasDAO.selectMany({ idpaciente: id_pessoa });
         }else if(tipo == MEDICO){
-            resultadoConsultas = await consultasDAO.selectMany({chave: 'idmedico', valor: id_pessoa});
+            resultadoConsultas = await consultasDAO.selectMany({ idmedico: id_pessoa });
         }
 
         return resultadoConsultas;
